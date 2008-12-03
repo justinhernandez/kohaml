@@ -26,7 +26,6 @@ class Kohaml extends KohamlLib
 	{
 		$this->debug = Kohana::config('kohaml.debug');
 		$this->handler($name);
-		error_reporting(E_ERROR | E_WARNING | E_PARSE);
 	}
 
 	/**

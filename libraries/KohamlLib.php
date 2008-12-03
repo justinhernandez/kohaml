@@ -48,8 +48,6 @@ abstract class KohamlLib
 	 */
 	public function compile($contents)
 	{
-		// ignore empty match arrays
-		error_reporting(E_ERROR | E_WARNING | E_PARSE);
 		// parse file contents into iterator
 		$this->file = new ArrayIterator($contents);
 		$output = '';
@@ -92,24 +90,24 @@ abstract class KohamlLib
 			$this->strip_php();
 			// break up line into chunks
 			preg_match('/^([ \t]+)?([^ \{]+)(\{(.+)\})?(.+)?/', $this->line, $m);
-			$this->indent = $m[1];
+			$this->indent = @$m[1];
 			// parse element tag
-			$this->matched_tag = trim($m[2]);
+			$this->matched_tag = trim(@$m[2]);
 			// matched text
-			$this->text = trim($m[5]);
+			$this->text = trim(@$m[5]);
 			// parse element tag
 			$this->element();
 			// parse attributes into a string
-			$this->matched_attr = trim($m[4]);
+			$this->matched_attr = trim(@$m[4]);
 			if ($this->matched_attr) $this->parse_attributes();
 		} 
 		// check for comment element
 		else if ($first == '/')
 		{
 			preg_match('/^([ \t]+)?\/(.+)/', $this->line, $m);
-			$this->indent = $m[1];
+			$this->indent = @$m[1];
 			$this->tag = '<!-- ';
-			$this->text = trim($m[2]);
+			$this->text = trim(@$m[2]);
 			// add nbsp because close tags are trimmed will be converted back later
 			$this->add_close('&nbsp;-->');
 		}
@@ -117,11 +115,11 @@ abstract class KohamlLib
 		else if ($first == '!')
 		{
 			preg_match('/!{3}( [^ ]+)?( .+)?/', $this->line, $m);
-			$type = ($m[1])
-				  ? trim($m[1])
+			$type = (@$m[1])
+				  ? trim(@$m[1])
 				  : '1.0';
-			$enc = ($m[2])
-				 ? trim($m[2])
+			$enc = (@$m[2])
+				 ? trim(@$m[2])
 				 : 'utf-8';
 			$types =
 				array(
@@ -139,7 +137,7 @@ abstract class KohamlLib
 		else if ($first == '|')
 		{
 			preg_match('/^([ \t]+)?/', $this->line, $m);
-			$this->indent = $m[1];
+			$this->indent = @$m[1];
 			$this->tag = '[[KOHAML::ESCAPE]]';
 			$this->line = $this->indent.trim(str_replace('|', '', $this->line));
 			$this->add_close('');
@@ -153,7 +151,7 @@ abstract class KohamlLib
 		else
 		{
 			preg_match('/^([ \t]+)?/', $this->line, $m);
-			$this->indent = $m[1];
+			$this->indent = @$m[1];
 			$this->tag = '[[KOHAML::ESCAPE]]';
 			$this->add_close('');
 		}
@@ -248,12 +246,12 @@ abstract class KohamlLib
 	{
 		$next = $this->lineno + 1;
 		$count = $this->file->count();
-		while (preg_match('/^([ \t]+)?(\<\?)/', $this->file->offsetGet($next)) AND ($next < $count))
+		while (@preg_match('/^([ \t]+)?(\<\?)/', $this->file->offsetGet($next)) AND ($next < $count))
 		{
 			$next++;
 		}
-		preg_match('/^([ \t]+)/', $this->file->offsetGet($next), $m);
-		$this->next_indent = $m[1];
+		@preg_match('/^([ \t]+)/', $this->file->offsetGet($next), $m);
+		$this->next_indent = @$m[1];
 	}
 
 	/**
@@ -261,6 +259,8 @@ abstract class KohamlLib
 	 */
 	private function refill_line()
 	{
+		$attrs = '';
+		$this->replace_rules();
 		// compile attributes
 		foreach($this->attr as $type => $val)
 		{
@@ -281,6 +281,20 @@ abstract class KohamlLib
 	}
 
 	/**
+	 * Function where all replace rules are handled and parsed
+	 */
+	private function replace_rules()
+	{
+		$rule = array();
+		$replace = array();
+		// element= $var --> element <?= $var ? >
+		$rule[] = '/(= \$[^ $\n]+)/';
+		$replace = '<?$1 ?>';
+
+		$this->line = preg_replace($rule, $replace, $this->line);
+	}
+
+	/**
 	 * Handle matched element text e.g. %div#content.text
 	 */
 	private function element()
@@ -288,8 +302,8 @@ abstract class KohamlLib
 		// get first
 		$first = $this->matched_tag[0];
 		// get rest of element
-		preg_match("/$first([^\{\.# ]+)/", $this->matched_tag, $m);
-		$element = trim($m[1]);
+		preg_match("/$first([^\{\.#  =\/]+)/", $this->matched_tag, $m);
+		$element = trim(@$m[1]);
 		// check for self closing tag
 		if (substr(trim($this->line), -1) == '/')
 		{
@@ -366,9 +380,9 @@ abstract class KohamlLib
 	private function parse_id_class()
 	{
 		preg_match_all('/\.([^#  \{\.]+)/', $this->matched_tag, $m);
-		$this->add_attr('class', $m[1]);
+		$this->add_attr('class', @$m[1]);
 		preg_match_all('/#([^\.  \{\#]+)/', $this->matched_tag, $m);
-		$this->add_attr('id', $m[1]);
+		$this->add_attr('id', @$m[1]);
 	}
 
 	/**
@@ -381,7 +395,7 @@ abstract class KohamlLib
 	{
 		for($i=0; $i<count($vals); $i++)
 		{
-			$this->attr[$type] .= ' '.$vals[$i];
+			@$this->attr[$type] .= ' '.$vals[$i];
 		}
 	}
 
@@ -406,9 +420,9 @@ abstract class KohamlLib
 	private function strip_php()
 	{
 		preg_match_all('(\<\?.+?\?\>)', $this->line, $m);
-		if ($m[0])
+		if (@$m[0])
 		{
-			foreach($m[0] as $php)
+			foreach(@$m[0] as $php)
 			{
 				$this->php[] = $php;
 			}

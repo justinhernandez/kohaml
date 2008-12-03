@@ -13,5 +13,6 @@ class Kohaml_Controller extends Template_Controller
 	public function index()
 	{
 		$this->template->wow = new View('demo2');
+		$this->template->hello = ' the hello variable';
 	}
 }
