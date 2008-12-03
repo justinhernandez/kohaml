@@ -1,3 +1,3 @@
-If downloading from github, rename folder to auto_form and put it into the modules folder. Don't forget to add auto_form under modules in config.php.
+Haml module for Kohana. Haml is a markup language that‘s used to cleanly and simply describe the XHTML of any web document, without the use of inline code. Haml functions as a replacement for inline page templating systems such as PHP, ERB, and ASP. However, Haml avoids the need for explicitly coding XHTML into the template, because it is actually an abstract description of the XHTML, with some code to generate dynamic content. 
 
-Check out the docs folder.
+Haml: http://haml.hamptoncatlin.com/docs/rdoc/classes/Haml.html
