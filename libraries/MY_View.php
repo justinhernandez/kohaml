@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 /**
- * Kohaml library to parse haml files
+ * Custom view function for Kohaml
  *
  * @package        Kohaml
  * @author         Justin Hernandez <justin@transphorm.com>
