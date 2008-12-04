@@ -1,3 +1,5 @@
 Haml module for Kohana. Haml is a markup language that‘s used to cleanly and simply describe the XHTML of any web document, without the use of inline code. Haml functions as a replacement for inline page templating systems such as PHP, ERB, and ASP. However, Haml avoids the need for explicitly coding XHTML into the template, because it is actually an abstract description of the XHTML, with some code to generate dynamic content. 
 
 Haml: http://haml.hamptoncatlin.com/docs/rdoc/classes/Haml.html
+
+Kohaml: http://blog.transphorm.com/kohaml-haml-module-for-kohana

@@ -1,5 +1,11 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-
+/**
+ * Kohaml library to parse haml files
+ *
+ * @package        Kohaml
+ * @author         Justin Hernandez <justin@transphorm.com>
+ * @license        http://www.opensource.org/licenses/isc-license.txt
+ */
 class View extends View_Core
 {
 	// cached file name
