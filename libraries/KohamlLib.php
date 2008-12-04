@@ -1,7 +1,6 @@
 <?php
 /**
- * Kohaml library to parse haml files. If using class without Kohana edit
- * refill_line() and take out the Kohana config call.
+ * Kohaml library to parse haml files.
  *
  * @package        Kohaml
  * @author         Justin Hernandez <justin@transphorm.com>
@@ -9,6 +8,8 @@
  */
 abstract class KohamlLib
 {
+	// Use KohamlLib without Kohana
+	private $standalone = FALSE;
 	// array of closing tags
 	private $close_tags = array();
 	// current line #
@@ -39,6 +40,23 @@ abstract class KohamlLib
 	private $close_self;
 	// file object
 	private $file;
+	// offset length
+	public $offset;
+
+	/**
+	 * Load initial settings. Make changes here if you are using KohamlLib in
+	 * standalone mode. Check out replace_rules() for adding your own custom rules.
+	 * No __construct because it is an abstract class.
+	 */
+	private function init()
+	{
+		// double or single quotes
+		$quotes = "double";
+		
+		$this->quotes = ($this->standalone)
+					  ? $quotes
+					  : Kohana::config('kohaml.quotes');
+	}
 
 	/**
 	 * Main function. Parses haml and returns html
@@ -47,8 +65,12 @@ abstract class KohamlLib
 	 * @param  array    $contents
 	 * @return string
 	 */
-	public function compile($contents)
+	public function compile($contents, $offset = 0, $nested = FALSE)
 	{
+		// load initial settings
+		$this->init();
+		// set offset
+		if ($offset != 0) $this->offset = $this->create_offset($offset);
 		// parse file contents into iterator
 		$this->file = new ArrayIterator($contents);
 		$output = '';
@@ -84,6 +106,8 @@ abstract class KohamlLib
 	private function parse_line()
 	{
 		$first = substr(trim($this->line), 0, 1);
+		// set indent
+		$this->set_indent();
 		// run replacement rules
 		$this->replace_rules();
 		// check if it's a tag element then handle appropriately
@@ -93,7 +117,6 @@ abstract class KohamlLib
 			$this->strip_php();
 			// break up line into chunks
 			preg_match('/^([ \t]+)?([^ \{]+)(\{(.+)\})?(.+)?/', $this->line, $m);
-			$this->indent = @$m[1];
 			// parse element tag
 			$this->matched_tag = trim(@$m[2]);
 			// matched text
@@ -108,7 +131,6 @@ abstract class KohamlLib
 		else if ($first == '/')
 		{
 			preg_match('/^([ \t]+)?\/(.+)/', $this->line, $m);
-			$this->indent = @$m[1];
 			$this->tag = '<!-- ';
 			$this->text = trim(@$m[2]);
 			// add nbsp because close tags are trimmed will be converted back later
@@ -140,7 +162,6 @@ abstract class KohamlLib
 		else if ($first == '|')
 		{
 			preg_match('/^([ \t]+)?/', $this->line, $m);
-			$this->indent = @$m[1];
 			$this->tag = '[[KOHAML::ESCAPE]]';
 			$this->line = $this->indent.trim(str_replace('|', '', $this->line));
 			$this->add_close('');
@@ -148,18 +169,16 @@ abstract class KohamlLib
 		// is current line php?
 		else if (preg_match('/^([ \t]+)?(\<\?)/', $this->line))
 		{
+			$this->line .= " \n";
 			return FALSE;
 		}
 		// must be text or something else pass thru
 		else
 		{
 			preg_match('/^([ \t]+)?/', $this->line, $m);
-			$this->indent = @$m[1];
 			$this->tag = '[[KOHAML::ESCAPE]]';
 			$this->add_close('');
 		}
-		// check the indent level
-		$this->check_indent();
 		// look ahead at next line to determine depth and close tags
 		$this->look_ahead();
 		// construct line
@@ -199,6 +218,14 @@ abstract class KohamlLib
 		$this->add_new_line();
 	}
 
+	/**
+	 * Add a new line to the current line if no new line is present
+	 */
+	private function add_new_line()
+	{
+		if (!(substr($this->line, -1) == "\n")) $this->line .= " \n";
+	}
+
 	/*
 	 * Close tags
 	 */
@@ -233,12 +260,15 @@ abstract class KohamlLib
 		}
 	}
 
-	/**
-	 * Add a new line to the current line if no new line is present
-	 */
-	private function add_new_line()
+	private function set_indent()
 	{
-		if (!(substr($this->line, -1) == "\n")) $this->line .= "\n";
+		preg_match('/^([ \t]+)?/', $this->line, $m);
+		// add offset to indent for include haml files
+		$this->indent = ($this->offset)
+					  ? $this->offset
+					  : @$m[1];
+		// check the indent level
+		$this->check_indent();
 	}
 
 	/*
@@ -267,7 +297,7 @@ abstract class KohamlLib
 		foreach($this->attr as $type => $val)
 		{
 			$val = addslashes(trim($val));
-			$attrs .= (Kohana::config('kohaml.quotes')=="double")
+			$attrs .= ($this->quotes == "double")
 					? " $type=\"$val\""
 					: " $type='$val'";
 		}
@@ -291,9 +321,24 @@ abstract class KohamlLib
 	{
 		$rule = array();
 		$replace = array();
+		$m = array();
 		// RULE #1 element= $var --> element <?= $var ? >
 		$rule[] = '/([^\<\?]+)=[ ]+(\$[^ $\n{]+)/';
-		$replace = '$1 <?= $2 ?>';
+		$replace[] = '$1 <?= $2 ?>&nbsp;';
+
+		// Kohana specific replace rules
+		if (!$this->standalone)
+		{
+			// for nice template rendering, add 2 for nesting
+			$indent = strlen($this->indent);
+			// RULE #2 load for loading sub-views
+			$rule[] = '/^([ \t]+)?load\((.+)\)/';
+			$replace[] = "$1<?php Kohaml::load('$2', $indent, FALSE) ?>";
+
+			// RULE #3 load for loading sub-views
+			$rule[] = '/([^\<\?]+)=[ ]+load\((.+)\)/';
+			$replace[] = "$1 <?php Kohaml::load('$2', $indent, TRUE)?>";
+		}
 
 		// apply rules
 		$this->line = preg_replace($rule, $replace, $this->line);
@@ -452,6 +497,16 @@ abstract class KohamlLib
 		$this->attr = array();
 		$this->close_self = '';
 		$this->text = '';
+	}
+
+	private function create_offset($length)
+	{
+		$offset = '';
+		for($l=0; $l<$length; $l++)
+		{
+			$offset .= ' ';
+		}
+		return $offset;
 	}
 
 	/**

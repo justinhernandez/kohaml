@@ -4,8 +4,10 @@
     %title#content.wow{a => 'hello'} Hello World
   %body
     .wow hhaha
-      %strong{'class' => "code", 'id' => "message"} Hello, World! <? 'howdy' ?>
+      <?php echo('wuttup'); ?>
+      %strong{'class' => "code", 'id' => "message"} Hello, World! <?= 'howdy' ?>
       %b Hello World
+      load(include_me)
       %peanutbutterjelly
         / This is the peanutbutterjelly element
         .helloa <?= $wow ?>
@@ -14,15 +16,14 @@
     #foo=   $wow
       hahaa
       %b{'class' => 'type'}= $hello
-    %sandwich{'delicious' => 'true', 'more' = 'okay'}
+    %sandwich{'delicious' => 'true', 'more' => 'okay'}
     .wowaa he
       |<?php echo('wuttup'); ?>
-    |<?php echo('wuttup'); ?>
+        |<?php echo('wuttup'); ?>
+          #wow howzit
+        |<?php echo('wuttup'); ?>
       |<?php echo('wuttup'); ?>
-        #wow.escape
-      |<?php echo('okay') ?>
-    |<?php echo('wuttup'); ?>
     %ul
-      %li <?php 'hello' ?> jadsf <?php 'aa' ?>
+      %li <?= 'hello' ?> jadsf <?= 'aa' ?>
       %li Pepper
       / heloaf

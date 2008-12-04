@@ -56,3 +56,10 @@ $config['cache_clean_time'] = 2592000;
  * DEFAULT: 30
  */
 $config['cache_gc'] = 30;
+
+/**
+ * Raise error on find errors. Must use quotes.
+ *
+ * DEFAULT: TRUE
+ */
+$config['find_raise_error'] = "TRUE";
