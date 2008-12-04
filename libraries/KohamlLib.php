@@ -357,7 +357,7 @@ abstract class KohamlLib
 
 		foreach($attr as $a)
 		{
-			$val = split('=>', $a);
+			$val = split('=', $a);
 			$this->add_attr($this->clean_attr($val[0]), array($this->clean_attr($val[1])));
 		}
 	}
