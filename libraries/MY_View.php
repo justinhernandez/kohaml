@@ -56,7 +56,14 @@ class View extends View_Core
 				throw new Kohana_Exception('core.invalid_filetype', $type);
 
 			// Load the filename and set the content type
-			$this->kohana_filename = Kohana::find_file('views', $name, TRUE, $type);
+			if (Kohana::config('kohaml.on') && $type == Kohana::config('kohaml.ext'))
+			{
+				$this->kohana_filename = $this->cached;
+			}
+			else
+			{
+				$this->kohana_filename = Kohana::find_file('views', $name, TRUE, $type);
+			}
 			$this->kohana_filetype = Kohana::config('mimes.'.$type);
 
 			if ($this->kohana_filetype == NULL)
