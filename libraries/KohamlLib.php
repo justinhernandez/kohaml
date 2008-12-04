@@ -260,6 +260,9 @@ abstract class KohamlLib
 		}
 	}
 
+	/**
+	 * Set the indent for each line.
+	 */
 	private function set_indent()
 	{
 		preg_match('/^([ \t]+)?/', $this->line, $m);
@@ -499,6 +502,12 @@ abstract class KohamlLib
 		$this->text = '';
 	}
 
+	/**
+	 * Creates string of spaces for the given length
+	 *
+	 * @param   integer   $length
+	 * @return  string
+	 */
 	private function create_offset($length)
 	{
 		$offset = '';
