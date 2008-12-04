@@ -14,6 +14,13 @@ $config['on'] = TRUE;
 $config['debug'] = FALSE;
 
 /**
+ * Single or double quotes for wrapping attribute values
+ *
+ * DEFAULT: 'double'
+ */
+$config['quotes'] = 'double';
+
+/**
  * Haml extension. Haml templates must reside within a views folder
  *
  * DEFAULT: haml

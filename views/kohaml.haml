@@ -1,20 +1,20 @@
 !!!
 %html
   %head
-    %title#content.wow{a = 'hello'} Hello World
+    %title#content.wow{a => 'hello'} Hello World
   %body
     .wow hhaha
-      %strong{'class' = "code", 'id' = "message"} Hello, World! <? 'howdy' ?>
+      %strong{'class' => "code", 'id' => "message"} Hello, World! <? 'howdy' ?>
       %b Hello World
       %peanutbutterjelly
         / This is the peanutbutterjelly element
         .helloa <?= $wow ?>
-        #woa wasaa
+        #woa was
         %br/
     #foo=   $wow
       hahaa
-      %b{'class' = 'type'}= $hello
-    %sandwich{'delicious' = 'true', 'more' = 'okay'}
+      %b{'class' => 'type'}= $hello
+    %sandwich{'delicious' => 'true', 'more' = 'okay'}
     .wowaa he
       |<?php echo('wuttup'); ?>
     |<?php echo('wuttup'); ?>

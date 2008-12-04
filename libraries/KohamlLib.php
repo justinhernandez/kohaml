@@ -1,6 +1,7 @@
 <?php
 /**
- * Kohaml library to parse haml files
+ * Kohaml library to parse haml files. If using class without Kohana edit
+ * refill_line() and take out the Kohana config call.
  *
  * @package        Kohaml
  * @author         Justin Hernandez <justin@transphorm.com>
@@ -266,7 +267,9 @@ abstract class KohamlLib
 		foreach($this->attr as $type => $val)
 		{
 			$val = addslashes(trim($val));
-			$attrs .= " \"$type\"=\"$val\"";
+			$attrs .= (Kohana::config('kohaml.quotes')=="double")
+					? " $type=\"$val\""
+					: " $type='$val'";
 		}
 		$replace = array('[[KOHAML::ATTR]]', '&nbsp;');
 		$fill = array($attrs, ' ');
@@ -359,8 +362,8 @@ abstract class KohamlLib
 
 		foreach($attr as $a)
 		{
-			$val = split('=', $a);
-			$this->add_attr($this->clean_attr($val[0]), array($this->clean_attr($val[1])));
+			$val = split('=>', $a);
+			@$this->add_attr($this->clean_attr($val[0]), array($this->clean_attr($val[1])));
 		}
 	}
 
