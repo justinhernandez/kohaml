@@ -83,6 +83,8 @@ abstract class KohamlLib
 	private function parse_line()
 	{
 		$first = substr(trim($this->line), 0, 1);
+		// run replacement rules
+		$this->replace_rules();
 		// check if it's a tag element then handle appropriately
 		if (in_array($first, array('%', '#', '.')))
 		{
@@ -260,7 +262,6 @@ abstract class KohamlLib
 	private function refill_line()
 	{
 		$attrs = '';
-		$this->replace_rules();
 		// compile attributes
 		foreach($this->attr as $type => $val)
 		{
@@ -287,10 +288,11 @@ abstract class KohamlLib
 	{
 		$rule = array();
 		$replace = array();
-		// element= $var --> element <?= $var ? >
-		$rule[] = '/(= \$[^ $\n]+)/';
-		$replace = '<?$1 ?>';
+		// RULE #1 element= $var --> element <?= $var ? >
+		$rule[] = '/([^\<\?]+)=[ ]+(\$[^ $\n{]+)/';
+		$replace = '$1 <?= $2 ?>';
 
+		// apply rules
 		$this->line = preg_replace($rule, $replace, $this->line);
 	}
 
