@@ -42,6 +42,8 @@ abstract class KohamlLib
 	private $file;
 	// compiled template
 	private $output;
+	// script name for debugging
+	private $script;
 	// offset length
 	public $offset;
 
@@ -54,7 +56,7 @@ abstract class KohamlLib
 	{
 		// double or single quotes
 		$quotes = "double";
-		
+
 		$this->quotes = ($this->standalone)
 					  ? $quotes
 					  : Kohana::config('kohaml.quotes');
@@ -67,10 +69,12 @@ abstract class KohamlLib
 	 * @param  array    $contents
 	 * @return string
 	 */
-	public function compile($contents, $offset = 0, $nested = FALSE)
+	public function compile($contents, $script = NULL, $offset = 0, $nested = FALSE)
 	{
 		// load initial settings
 		$this->init();
+		// set script name
+		$this->script = $script;
 		// set offset
 		if ($offset != 0) $this->offset = $this->create_offset($offset);
 		// parse file contents into iterator
@@ -128,7 +132,7 @@ abstract class KohamlLib
 			// parse attributes into a string
 			$this->matched_attr = trim(@$m[4]);
 			if ($this->matched_attr) $this->parse_attributes();
-		} 
+		}
 		// check for comment element
 		else if ($first == '/')
 		{
@@ -188,7 +192,7 @@ abstract class KohamlLib
 			{
 				$this->add_new_line();
 			}
-			
+
 			return FALSE;
 		}
 		// must be text or something else pass thru
@@ -300,7 +304,7 @@ abstract class KohamlLib
 					  ? $this->offset
 					  : @$m[1];
 		// check the indent level
-		$this->check_indent();
+		$this->check_indent(strlen($this->indent));
 	}
 
 	/*
@@ -317,6 +321,8 @@ abstract class KohamlLib
 		}
 		@preg_match('/^([ \t]+)/', $this->file->offsetGet($next), $m);
 		$this->next_indent = @$m[1];
+		// check indentation level
+		$this->check_indent(strlen($this->next_indent), $next);
 	}
 
 	/**
@@ -484,15 +490,13 @@ abstract class KohamlLib
 	/**
 	 * Check indent for current line. Raises error for invalid indentation.
 	 */
-	private function check_indent()
+	private function check_indent($indent, $line = NULL)
 	{
-		// strips tabs just in case
-		$indent = str_replace("\t", '', $this->indent);
-		if ((strlen($indent) % 2) != 0)
+		if (($indent % 2) != 0)
 		{
-			$line = $this->lineno+1;
+			$line = ($line) ? $line+1 : $this->lineno+1;
 			$length = strlen($this->indent);
-			throw new Exception("Incorrect indent length($length) on line #$line.");
+			throw new Exception("Incorrect indentation in '$this->script' on line #$line.");
 		}
 	}
 
