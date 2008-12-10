@@ -61,7 +61,7 @@ class Kohaml extends KohamlLib
 		if (!$this->skip || $this->debug)
 		{
 			// put file contents into an array then pass to render
-			$output = $this->compile(file($this->file), $offset, $nested);
+			$output = $this->compile(file($this->file), $name, $offset, $nested);
 			// cache output
 			if (!$this->debug) $this->cache($output);
 		}
