@@ -40,6 +40,8 @@ abstract class KohamlLib
 	private $close_self;
 	// file object
 	private $file;
+	// compiled template
+	private $output;
 	// offset length
 	public $offset;
 
@@ -73,7 +75,7 @@ abstract class KohamlLib
 		if ($offset != 0) $this->offset = $this->create_offset($offset);
 		// parse file contents into iterator
 		$this->file = new ArrayIterator($contents);
-		$output = '';
+		$this->output = '';
 		while($this->file->valid())
 		{
 			// set current line information
@@ -89,15 +91,15 @@ abstract class KohamlLib
 			else
 			{
 				// add compiled line to output
-				$output .= $this->line;
+				$this->output .= $this->line;
 			}
 			$this->clear_current();
 			$this->file->next();
 		}
 		// close all open tags
-		$this->close_nested(count($this->close_tags));
+		$this->close_nested(count($this->close_tags), TRUE);
 		if ($this->debug) die();
-		return trim($output);
+		return trim($this->output);
 	}
 
 	/**
@@ -116,7 +118,7 @@ abstract class KohamlLib
 			// strip php tags to re-input later
 			$this->strip_php();
 			// break up line into chunks
-			preg_match('/^([ \t]+)?([^ \{]+)(\{(.+)\})?(.+)?/', $this->line, $m);
+			preg_match('/^([ \t]+)? ?([^ \{]+)(\{(.+)\})?(.+)?/', $this->line, $m);
 			// parse element tag
 			$this->matched_tag = trim(@$m[2]);
 			// matched text
@@ -167,9 +169,25 @@ abstract class KohamlLib
 			$this->add_close('');
 		}
 		// is current line php?
-		else if (preg_match('/^([ \t]+)?(\<\?)/', $this->line))
+		else if (preg_match('/^([ \t]+)?(\<\?).+(\?\>)?/', $this->line, $m))
 		{
-			$this->line .= " \n";
+			// if closing php tag is not on current line look for it
+			if (!@$m[3])
+			{
+				// step over lines and add to output until closing tag is found
+				// or end of file
+				while ((!preg_match('/\?\>/', $this->file->current())) AND $this->file->valid())
+				{
+					$this->output .= $this->file->current();
+					$this->file->next();
+				}
+				$this->line = $this->file->current()." \n";
+			}
+			else
+			{
+				$this->line .= " \n";
+			}
+			
 			return FALSE;
 		}
 		// must be text or something else pass thru
@@ -248,7 +266,7 @@ abstract class KohamlLib
 	 *
 	 * @param  integer  $count
 	 */
-	private function close_nested($count)
+	private function close_nested($count, $use_output = FALSE)
 	{
 		$this->add_new_line();
 		// close nested
@@ -256,7 +274,17 @@ abstract class KohamlLib
 		{
 			// check for empty close tags and don't add them
 			$close = array_pop($this->close_tags);
-			if (trim($close)) $this->line .= $close."\n";
+			if (trim($close))
+			{
+				if ($use_output)
+				{
+					$this->output .= $close."\n";
+				}
+				else
+				{
+					$this->line .= $close."\n";
+				}
+			}
 		}
 	}
 
@@ -472,7 +500,7 @@ abstract class KohamlLib
 	 */
 	private function strip_php()
 	{
-		preg_match_all('(\<\?.+?\?\>)', $this->line, $m);
+		preg_match_all('/(\<\?.+?\?\>)/', $this->line, $m);
 		if (@$m[0])
 		{
 			foreach(@$m[0] as $php)
