@@ -172,7 +172,7 @@ abstract class KohamlLib
 		else if (preg_match('/^([ \t]+)?(\<\?).+(\?\>)?/', $this->line, $m))
 		{
 			// if closing php tag is not on current line look for it
-			if (!@$m[3])
+			if (@trim($m[3]))
 			{
 				// step over lines and add to output until closing tag is found
 				// or end of file
@@ -181,11 +181,12 @@ abstract class KohamlLib
 					$this->output .= $this->file->current();
 					$this->file->next();
 				}
-				$this->line = $this->file->current()." \n";
+				$this->line = $this->file->current();
+				$this->add_new_line();
 			}
 			else
 			{
-				$this->line .= " \n";
+				$this->add_new_line();
 			}
 			
 			return FALSE;
@@ -241,7 +242,7 @@ abstract class KohamlLib
 	 */
 	private function add_new_line()
 	{
-		if (!(substr($this->line, -1) == "\n")) $this->line .= " \n";
+		if (!(substr($this->line, -1) == "\n")) $this->line .= "\n";
 	}
 
 	/*
