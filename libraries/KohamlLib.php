@@ -387,7 +387,7 @@ abstract class KohamlLib
 		preg_match("/$first([^\{\.#  =\/]+)/", $this->matched_tag, $m);
 		$element = trim(@$m[1]);
 		// check for self closing tag
-		if (substr(trim($this->line), -1) == '/')
+		if (substr(trim($this->line), -2, 2) == ' /')
 		{
 			$this->close_self = '/';
 			$this->text = "";
