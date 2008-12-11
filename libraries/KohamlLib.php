@@ -498,6 +498,11 @@ abstract class KohamlLib
 			$length = strlen($this->indent);
 			throw new Exception("Incorrect indentation in '$this->script' on line #$line.");
 		}
+		// check indentation level
+		if ((strlen($this->next_indent) !=0 ) AND (strlen($this->indent)+2 < strlen($this->next_indent)))
+		{
+			throw new Exception("Incorrect nesting indentation in '$this->script' on line #$line.");
+		}
 	}
 
 	/**
