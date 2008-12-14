@@ -89,6 +89,8 @@ class Kohaml extends KohamlLib
 		$type = Kohana::config('kohaml.ext');
 		$raise = Kohana::config('kohaml.find_raise_error');
 		$this->file = Kohana::find_file('views', $name, $raise, $type);
+		if (!is_file($this->file))
+			throw new Exception("Haml template '$name' can not be found!");
 	}
 
 	/**
