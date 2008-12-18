@@ -42,6 +42,8 @@ abstract class KohamlLib
 	private $file;
 	// compiled template
 	private $output;
+	// skip nested php
+	private $nested_php;
 	// script name for debugging
 	private $script;
 
@@ -107,6 +109,9 @@ abstract class KohamlLib
 	 */
 	private function parse_line()
 	{
+		// check for nested php
+		if ($this->nested_php()) return FALSE;
+
 		$first = substr(trim($this->line), 0, 1);
 		// set indent
 		$this->set_indent();
@@ -167,6 +172,8 @@ abstract class KohamlLib
 			$this->tag = '[[KOHAML::ESCAPE]]';
 			$this->line = $this->indent.trim(str_replace('|', '', $this->line));
 			$this->add_close('');
+			// if closing tag is not on this line than php is nested
+			if (!strpos($this->line, '?>')) $this->nested_php = TRUE;
 		}
 		// is current line php?
 		else if (preg_match('/^([ \t]+)?(\<\?).+(\?\>)?/', $this->line, $m))
@@ -202,6 +209,26 @@ abstract class KohamlLib
 		$this->look_ahead();
 		// construct line
 		$this->construct_line();
+	}
+
+	/**
+	 * Is php nested?
+	 *
+     * @return boolean
+     */
+	private function nested_php()
+	{
+		// check for nested php and return false while nested
+		if ($this->nested_php)
+		{
+			// if end tag on this line the set nested to FALSE but still skip
+			// this line.
+			if (strpos($this->line, '?>')) $this->nested_php = FALSE;
+			// still nested
+			return TRUE;
+		}
+		// no nested php
+		return FALSE;
 	}
 
 	/**
