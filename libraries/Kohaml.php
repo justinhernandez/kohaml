@@ -14,8 +14,6 @@ class Kohaml extends KohamlLib
 	private $file;
 	// skip if cache exists and is current
 	private $skip = FALSE;
-	// is nested
-	private $nested;
 	// debug mode
 	protected $debug;
 
@@ -24,25 +22,10 @@ class Kohaml extends KohamlLib
 	 *
 	 * @param  string  $name
 	 */
-	public function __construct($name = NULL, $offset = 0, $nested = FALSE)
+	public function __construct($name = NULL)
 	{
 		$this->debug = Kohana::config('kohaml.debug');
-		$this->handler($name, $offset, $nested);
-	}
-
-	/**
-	 * Helper for loading sub-views
-	 *
-	 * @param  string   $name
-	 * @param  int      $offset
-	 * @param  boolean  $nested
-	 */
-	public static function load($name, $offset, $nested)
-	{
-		// if nested the increase offset
-		if ($nested) $offset += 2;
-		$load = new Kohaml($name, $offset, $nested);
-		print(file_get_contents($load->cache_file));
+		$this->handler($name);
 	}
 
 	/**
@@ -50,9 +33,8 @@ class Kohaml extends KohamlLib
 	 *
 	 * @param  string  $name
 	 */
-	private function handler($name, $offset, $nested)
+	private function handler($name)
 	{
-		$this->nested = $nested;
 		$this->check_directory();
 		$this->clean_cache();
 		$this->load_file_path($name);
@@ -61,7 +43,7 @@ class Kohaml extends KohamlLib
 		if (!$this->skip || $this->debug)
 		{
 			// put file contents into an array then pass to render
-			$output = $this->compile(file($this->file), $name, $offset, $nested);
+			$output = $this->compile(file($this->file), $name);
 			// cache output
 			if (!$this->debug) $this->cache($output);
 		}
@@ -89,8 +71,6 @@ class Kohaml extends KohamlLib
 		$type = Kohana::config('kohaml.ext');
 		$raise = Kohana::config('kohaml.find_raise_error');
 		$this->file = Kohana::find_file('views', $name, $raise, $type);
-		if (!is_file($this->file))
-			throw new Exception("Haml template '$name' can not be found!");
 	}
 
 	/**
@@ -126,11 +106,6 @@ class Kohaml extends KohamlLib
 		touch($this->file);
 		$name = Kohana::config('kohaml.cache_folder').'/'.md5($this->file).EXT;
 		// add offset to cache file if using load() if not nested don't indent
-		if ($this->offset & $this->nested)
-		{
-			$outdent = substr($this->offset, 2, strlen($this->offset));
-			$output = "\n".$this->offset.$output."\n".$outdent;
-		}
 		file_put_contents($name, $output);
 		unset($output);
 	}
