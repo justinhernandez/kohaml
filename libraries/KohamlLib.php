@@ -77,7 +77,9 @@ abstract class KohamlLib
 		// load initial settings
 		$this->init();
 		// set script name
-		$this->script = $script;
+		$this->script = (!$this->standalone)
+					  ? $script.Kohana::config('kohaml.ext')
+					  : $script;
 		// parse file contents into iterator
 		$this->file = new ArrayIterator($contents);
 		$this->output = '';
