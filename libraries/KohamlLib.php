@@ -71,6 +71,9 @@ abstract class KohamlLib
 	 */
 	public function compile($contents, $script = NULL)
 	{
+		// if $contents are empty throw error
+		if (empty($contents))
+			throw new Exception("Haml template '$script' can not be found.");
 		// load initial settings
 		$this->init();
 		// set script name
