@@ -10,5 +10,5 @@ $config['allowed_filetypes'] = array
 	'htm', 'html',
 	'css',
 	'js',
-	'khml' // compiled Kohaml template
+	'haml' // compiled Kohaml template
 );

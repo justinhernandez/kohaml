@@ -7,6 +7,14 @@
 $config['on'] = TRUE;
 
 /**
+ * Use controller name as a sub-folder
+ *
+ * DEFAULT: TRUE
+ */
+
+$config['controller_sub_folder'] = TRUE;
+
+/**
  * Debug mode?
  *
  * DEFAULT: FALSE
