@@ -4,7 +4,7 @@
  *
  * @package        Kohaml
  * @author         Justin Hernandez <justin@transphorm.com>
- * @version        1.0
+ * @version        1.0.2
  * @license        http://www.opensource.org/licenses/isc-license.txt
  */
 class Kohaml
@@ -80,7 +80,7 @@ class Kohaml
 			throw new Exception("Haml template '$script' can not be found.");
 		// set script name if in Kohana add the config's default extension
 		$this->script = (!$this->standalone)
-					  ? $script.Kohana::config('kohaml.ext')
+					  ? $script.'.'.Kohana::config('kohaml.ext')
 					  : $script;
 		// parse file contents into iterator
 		$this->file = new ArrayIterator($contents);
@@ -408,11 +408,11 @@ class Kohaml
 		{
 			// RULE #2 load for loading sub-views
 			$rule[] = '/^([ \t]+)?load\((.+)\)/';
-			$replace[] = "$1<?php print new View('$2') ?>";
+			$replace[] = "$1 <?php print new Haml('$2') ?>";
 
 			// RULE #3 load for loading sub-views
 			$rule[] = '/([^\<\?]+)=[ ]+load\((.+)\)/';
-			$replace[] = "$1<?php print new View('$2') ?>";
+			$replace[] = "$1 <?php print new Haml('$2') ?>";
 		}
 
 		// apply rules
