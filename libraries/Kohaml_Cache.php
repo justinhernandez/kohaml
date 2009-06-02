@@ -9,9 +9,12 @@
 class Kohaml_Cache_Core
 {
 	// skip caching?
-	public $skip;
+	private $skip;
 	// file name
 	private $file;
+	// cache time
+	private $cache_time;
+	
 
 	/**
 	 * Set type, kohaml or kosass
@@ -21,6 +24,7 @@ class Kohaml_Cache_Core
 	public function __construct($type)
 	{
 		$this->type = $type;
+		$this->cache_time = Kohana::config($this->type.'.cache_time');
 	}
 
 	/**
@@ -39,14 +43,20 @@ class Kohaml_Cache_Core
 	}
 	
 	/**
+	 * Skip need for caching?
+	 */
+	public function skip()
+	{
+		return $this->skip;
+	}
+	
+	/**
 	 * Cache output from Kohaml.
 	 *
 	 * @param  string  $output
 	 */
 	public function cache($output)
 	{
-		// touch file. helps determine if template was modified
-		touch($this->file);
 		$name = Kohana::config($this->type.'.cache_folder').'/'.md5($this->file).EXT;
 		// add offset to cache file if using load() if not nested don't indent
 		file_put_contents($name, $output);
@@ -73,10 +83,11 @@ class Kohaml_Cache_Core
 		
 		if (is_file($cache_file))
 		{
-			$cache_time = Kohana::config('kohaml.cache_time');
-			// check if template has been modified and is newer than cache
+			// touch file. helps determine if template was modified
+			touch($cache_file);
+			// check if template has been mofilemtime($cache_file)dified and is newer than cache
 			// allow $cache_time difference
-			if ((filemtime($this->file)) > (filemtime($cache_file)+$cache_time))
+			if ((filemtime($this->file)) > (filemtime($cache_file)+$this->cache_time))
 				$this->skip = TRUE;
 		}
 		
@@ -90,14 +101,14 @@ class Kohaml_Cache_Core
 	private function clean_cache()
 	{
 		//gc probability
-		$gc = rand(1, Kohana::config('kohaml.cache_gc'));
+		$gc = rand(1, Kohana::config($this->type.'.cache_gc'));
 		if ($gc != 1) return FALSE;
-		$cache = new DirectoryIterator(Kohana::config('kohaml.cache_folder'));
+		$cache = new DirectoryIterator(Kohana::config($this->type.'.cache_folder'));
 		while ($cache->valid())
 		{
 			// if file is past maximum cache settings delete file
 			$cached = date('U', $cache->getMTime());
-			$max = time() + Kohana::config('kohaml.cache_clean_time');
+			$max = time() + Kohana::config($this->type.'.cache_clean_time');
 			if ($cache->isFile() AND ($cached > $max))
 			{
 				unlink($cache->getPathname());

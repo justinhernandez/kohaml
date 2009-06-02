@@ -24,4 +24,10 @@ class Kohaml_Controller extends Template_Controller
 		$this->template->wow = new Haml('demo2');
 		$this->template->hello = ' the hello variable';
 	}
+	
+	public function sass()
+	{
+		$this->template->wow = new Haml('sass_demo');
+		$this->template->hello = ' sass files successfully rendered!';
+	}
 }

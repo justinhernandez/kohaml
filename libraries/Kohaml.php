@@ -7,7 +7,7 @@
  * @version        1.0.2
  * @license        http://www.opensource.org/licenses/isc-license.txt
  */
-class Kohaml
+class Kohaml_Core
 {
 	// Use Kohaml without Kohana
 	private $standalone = FALSE;
@@ -127,8 +127,6 @@ class Kohaml
 		// check if it's a tag element then handle appropriately
 		if (in_array($first, array('%', '#', '.')))
 		{
-			// strip php tags to re-input later
-			$this->strip_php();
 			// break up line into chunks
 			preg_match('/^([ \t]+)? ?([^ \{]+)(\{(.+)\})?(.+)?/', $this->line, $m);
 			// parse element tag

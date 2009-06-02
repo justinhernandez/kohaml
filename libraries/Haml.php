@@ -15,8 +15,6 @@ class Haml extends View
 	private $file;
 	// skip if cache exists and is current
 	private $skip = FALSE;
-	// debug mode
-	private $debug;
 
 
 	/**
@@ -38,7 +36,7 @@ class Haml extends View
 		$debug = Kohana::config('kohaml.debug');
 		
 		// if cache file does not exists then cache output from Kohaml
-		 if ( ! $cache->skip || $this->debug)
+		 if ( ! $cache->skip() || $debug)
 		{
 			$kohaml = new Kohaml($debug);
 			// put file contents into an array then pass to render
