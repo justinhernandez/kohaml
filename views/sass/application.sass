@@ -1,0 +1,104 @@
+
+// The stylesheet for the page you are viewing in Sass
+
+#page
+  #header 
+    :float left
+    :width 100%
+    :background #1A4F85
+    .container, #footer
+      :width 800px
+      :margin auto
+    h2.logo
+      a
+        :color white
+      a:selected, a:active, a:visited
+        :color white
+    .tabs
+      ul
+        :margin 0 16px
+        :padding 0
+        :list-style-type none
+        li
+          :background #1A4F85
+          :float left
+          :margin 0
+          :padding 0
+          :display inline
+      a
+        :color #fff
+        :float left
+        :margin 0
+        :padding 0.5em 1.8em
+        :text-decoration none
+      a:hover
+        :color #090
+        :background #FFF
+      a.selected, a.selected:hover
+        :background #FFF
+        :color #222
+        :font-weight bold
+  #content 
+    :width         850px
+    :margin-left   auto
+    :margin-right  auto
+    :padding       16px
+    :text-align    left
+    :clear         both
+    :margin-bottom 5px
+    hr 
+      :visibility hidden
+      :clear      both
+  
+  #footer
+    :text-align left
+    :clear      both
+    :color      #666
+    :font-size  11px
+
+  #renderers
+    :position relative
+    :height 310px
+    :width 900px
+    #source, #result
+      :width 400px
+      :height 300px
+      :background-color #fff
+      :position absolute
+    #source
+      :top 0
+      :left 0
+    #result
+      :border
+        :style inset
+        :width 2px
+        :color #fff
+      :top -10px
+      :right 0
+      :overflow auto
+
+// Document Defaults
+
+body
+  :background #e1e1e1
+  :text-align center
+  :margin     0
+  :padding    0
+
+body, td, th
+  :font normal 14px "lucida grande", arial, helvetica, sans-serif
+
+table 
+  :border-collapse collapse
+  :width 100%
+
+h1,h2,h3,h4,h5,h6 
+  :font-family helvetica, arial, sans-serif
+  :margin-bottom 15px
+
+code, pre
+  :font normal 80% "bitstream vera sans mono", monaco, "courier new", courier, monospace
+
+textarea
+  :width  400px
+  :height 300px

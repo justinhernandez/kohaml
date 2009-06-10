@@ -1,0 +1,94 @@
+#page #header {
+  float: left;
+  width: 100%;
+  background: #1A4F85; }
+  #page #header .container, #page #header #footer {
+    width: 800px;
+    margin: auto; }
+  #page #header h2.logo a {
+    color: white; }
+  #page #header h2.logo a:selected, #page #header h2.logo a:active, #page #header h2.logo a:visited {
+    color: white; }
+  #page #header .tabs ul {
+    margin: 0 16px;
+    padding: 0;
+    list-style-type: none; }
+    #page #header .tabs ul li {
+      background: #1A4F85;
+      float: left;
+      margin: 0;
+      padding: 0;
+      display: inline; }
+  #page #header .tabs a {
+    color: #fff;
+    float: left;
+    margin: 0;
+    padding: 0.5em 1.8em;
+    text-decoration: none; }
+  #page #header .tabs a:hover {
+    color: #090;
+    background: #FFF; }
+  #page #header .tabs a.selected, #page #header .tabs a.selected:hover {
+    background: #FFF;
+    color: #222;
+    font-weight: bold; }
+#page #content {
+  width: 850px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px;
+  text-align: left;
+  clear: both;
+  margin-bottom: 5px; }
+  #page #content hr {
+    visibility: hidden;
+    clear: both; }
+#page #footer {
+  text-align: left;
+  clear: both;
+  color: #666;
+  font-size: 11px; }
+#page #renderers {
+  position: relative;
+  height: 310px;
+  width: 900px; }
+  #page #renderers #source, #page #renderers #result {
+    width: 400px;
+    height: 300px;
+    background-color: #fff;
+    position: absolute; }
+  #page #renderers #source {
+    top: 0;
+    left: 0; }
+  #page #renderers #result {
+    border-style: inset;
+    border-width: 2px;
+    border-color: #fff;
+    
+    top: -10px;
+    right: 0;
+    overflow: auto; }
+
+body {
+  background: #e1e1e1;
+  text-align: center;
+  margin: 0;
+  padding: 0; }
+
+body, td, th {
+  font: normal 14px "lucida grande", arial, helvetica, sans-serif; }
+
+table {
+  border-collapse: collapse;
+  width: 100%; }
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: helvetica, arial, sans-serif;
+  margin-bottom: 15px; }
+
+code, pre {
+  font: normal 80% "bitstream vera sans mono", monaco, "courier new", courier, monospace; }
+
+textarea {
+  width: 400px;
+  height: 300px; }

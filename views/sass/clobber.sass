@@ -1,0 +1,49 @@
+// file with all the sass goodies to clobber Kosass
+
+
+// test constants
+!main_color=    #00ff00
+!black      = #eee
+!em         = em
+!width      = 10
+!bg_color   = #00ff00
+!height     = 15
+!main_width = 100
+!unit1      = px
+!unit2      = em
+
+// test regular syntax
+#main p
+  color: #00ff00
+  width: 97%
+  
+#main p
+  :color #00ff00
+  :width 10px
+  :height 5px
+
+// test constants
+#main
+  :background-color = 101
+
+// test parantheses and arithmetic
+p
+  :height = (8 * ( 5 + ( 4 * !height - 4 ))) + 6 + 2 + !unit1
+  // test adding constants
+  :width = !main_width + !unit1
+  // test adding hex numbers together
+  :color = (#32DD19 + #882143) + #666
+  // test hex and decimal number arithmetic
+  :background-color = 40% + 2
+img.thumb
+  :width = (!main_width + 15) + !unit2
+
+#renderers
+  :position relative
+  :height 310px
+  :width 900px
+  #source, #result
+    :width 400px
+    :height 300px
+    :background-color #fff
+    :position absolute
