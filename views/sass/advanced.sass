@@ -1,0 +1,42 @@
+
+// a comment 
+
+!jade = purple
+!main_color = orange
+!black      = #eee
+!em         = em
+
+=sub
+  z-index:20
+  font-weight: bold
+  a
+    color:blue
+    background: white
+
+=yahboi
+  +sub
+  display: inline
+  float: left
+  .selected
+    color : red
+    +sub
+  
+=block
+  display:block
+  :width 100px
+  :height 50px
+  :background red
+  
+#google
+  +yahboi
+
+#happy-face
+  background = !jade
+  :color blue
+  +block
+  &.huge
+    :width 100px
+  .small
+    :width 50px
+  .water
+    :background = !jade

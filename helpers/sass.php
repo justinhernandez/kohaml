@@ -26,20 +26,19 @@ class sass
 	 * @param   boolean  $inline
 	 * @return  string
 	 */
-	public static function stylesheet($files, $production = FALSE, $inline = FALSE)
+	public static function stylesheet($files, $style=NULL)
 	{
-		return self::handler($files, $production, $inline);
+		return self::handler($files, $style);
 	}
 	
 	/**
 	 * Handler
 	 *
 	 * @param   mixed    $files
-	 * @param   boolean  $production
-	 * @param   boolean  $inline
+	 * @param   boolean  $style of the output
 	 * @return  string
 	 */
-	private static function handler($files, $production, $inline)
+	private static function handler($files, $style)
 	{
 		// set variables
 		self::$cache_folder = Kohana::config('kosass.cache_folder');
@@ -56,9 +55,9 @@ class sass
 		// load cache library
 		$cache =  new Kohaml_Cache('kosass');
 		// check for debug
-		$debug = TRUE; //Kohana::config('kosass.debug');
+		$debug = FALSE; //Kohana::config('kosass.debug');
 		// init Kosass
-		$kosass = new Kosass($debug);
+		$kosass = new Kosass($style, $debug);
 		
 		// loop files
 		foreach (self::$files as $file)
@@ -66,7 +65,6 @@ class sass
 			// add cache file name
 			self::$cache_files[] = $cache->check($file);
 			$name = basename($file, '.'.Kohana::config('kosass.ext'));
-		
 			// if cache file does not exists then cache output from Kohaml
 			 if ( ! $cache->skip() || $debug)
 			{

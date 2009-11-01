@@ -5,3 +5,48 @@ You can use KohamlLib without Kohana and integrate it into your own project. Tur
 Haml: http://haml.hamptoncatlin.com/docs/rdoc/classes/Haml.html
 
 Kohaml: http://blog.transphorm.com/kohaml-haml-module-for-kohana
+
+
+**** THIS FORK IS WORKING ON SASS PARSING SPECIFICALLY. ***
+-------------------------------------------------------------
+
+please call root/kohaml/sass  to view a parsed sass file.
+all of the sass parsing is wholly contained in the kosass library. You can use this class as a standalone sass parser.
+
+
+Sass Specification Checklist: http://sass-lang.com/docs/yardoc/SASS_REFERENCE.md.html
+
+Specifications enabled  so far:
+
+Defining Rules and selectors:
+-- listing multiple selectors must be done on the same line with
+	commas as separators. This is different from sass in that you MUST
+	define them on a different line. 
+
+Defining properties (attributes) in both formats is enabled
+	color: blue 
+	:color blue
+	
+Nested Rules are enabled
+Referencing the parent selector is enabled. (with & )
+
+Property namespaces NOT enabled.
+Selector escaping NOT enabled.
+Directives and Control directives NOT enabled
+
+Sass Script (semi enabled)
+-- variables enabled.
+-- operations enabled.
+-- Interpolation NOT enabled.
+
+Mixins with nestable mixin-within-mixin functionality is enabled.
+-- Nested mixins MUST be defined before they are called.
+--Mixin Arguments NOT enabled.
+
+
+Basic inline comments are enabled. 
+--Comments must be on one line and will always be removed from output.
+
+"Style" output support which emulates 4 output styles in enabled. 
+	1.nested, 2.expanded, 3.compact, 4.compressed
+	

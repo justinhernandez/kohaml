@@ -37,22 +37,28 @@ class Kosass_Core
 	private $arithmetic_types = array('string' => 1, 'integer' => 3, 'hex' => 5, 'percent' => 7);
 	// sass constants
 	private $constants = array();
+	// sass mixins
+	private $mixins = array();
 	// skip current line
 	private $skip = FALSE;
 	// value to run arithmetic on
 	private $value;
 	// nested () value
 	private $nested_value;
+	// lets us know if we are working with lines in a mixin.
+	private $in_mixin = FALSE;
 	
-
 	/**
 	 * Load initial settings. Make changes here if you are using Kohaml in
 	 * standalone mode. Check out replace_rules() for adding your own custom rules.
 	 */
-	public function __construct($debug = FALSE)
+	public function __construct($style='nested', $debug = FALSE)
 	{
 		// set debug
 		$this->debug = $debug;
+		# set output style
+		$this->style = $style;
+		
 		// double or single quotes
 		$quotes = "double";
 
@@ -78,34 +84,105 @@ class Kosass_Core
 		$this->script = (!$this->standalone)
 					  ? $script.'.'.Kohana::config('kohaml.ext')
 					  : $script;
-		// parse file contents into iterator
-		$this->file = new ArrayIterator($contents);
+		
+		$this->file = $contents;
+		
+		# First parse original content to record constants and mixin definitions.
+		$parsed_contents = $this->record_vars($contents);
+	
+		# Next inject any mixin references as arrays.
+		$this->inject_mixins($parsed_contents);
+		
+		# expand the updated contents to a flat array
+			# thanks : http://stackoverflow.com/questions/526556
+		$objTmp = (object) array('aFlat' => array());
+		array_walk_recursive($this->file, create_function('&$v, $k, &$t', '$t->aFlat[] = $v;'), $objTmp);
+		$this->file = $objTmp->aFlat;
+		
+		# echo kohana::debug($this->file); 
+		# echo kohana::debug($this->mixins);
+		# echo kohana::debug($this->constants);	die();
+		
+		
+		# Lastly we can parse the contents for element/attribute stuff.
 		$this->output = '';
-		while($this->file->valid())
+		foreach($this->file as $key => $line)
 		{
 			// set current line information
-			$this->line = $this->file->current();
-			$this->lineno = $this->file->key();
-			// add parsed info to template
+			$this->line = $line;
+			$this->lineno = $key;	
+			// add parsed info to template. updates "$this->line" for inclusion into the output.
 			$this->parse_line();
-			// check for debug
+			
+			// check for debug , else add compiled line to final output.
 			if ($this->debug)
-			{
 				$this->debugo();
-			}
 			else
-			{
-				// add compiled line to output
 				$this->output .= $this->line;
-			}
+
 			$this->clear_current();
-			$this->file->next();
 		}
-		if ($this->debug) die();
-		
-		return trim($this->output);
+		if($this->debug) die();
+		echo trim($this->output);
 	}
 
+	
+	
+	/**
+	 * Handles the recording of the variable definitions.
+	 * constants and mixins
+	 */
+	private function record_vars($contents)
+	{
+		foreach($contents as $key => $line)
+		{
+			$type = $this->line_type($line);	
+			if('mixin' == $type OR 'mixin_data' == $type OR 'constant' == $type)
+			{
+				$this->line = $line;
+				$this->lineno = $key;
+				$this->set_indent();
+				
+				# function type which sets "$this->line" to the formatted data.
+				$this->$type();				
+				# look ahead at next line to determine depth and close tags
+				$this->look_ahead();	
+				
+				unset($this->file[$key]);
+			}
+			$this->clear_current();
+		}	
+		$this->file = array_merge($this->file);
+		$this->in_mixin = FALSE;	
+		return $this->file;
+	}
+
+	
+/* inject the mixins into the file array, replacing the mixin var
+ * with an array of the referenced mixin.
+ */
+	private function inject_mixins($contents)
+	{
+		# loop through all the lines looking for mixins.
+		foreach($contents as $key => $line)
+			if('replace_mixin' == $this->line_type($line))
+			{
+				$this->line = $line;
+				$this->set_indent();
+				$var = trim(str_replace('+', '', $line));
+				
+				# update the mixin with this line's indent value.
+				$mixin = $this->mixins[$var];
+				foreach($this->mixins[$var] as $mixin_key => $mixin_line)
+					$mixin[$mixin_key] = $this->indent . $mixin_line;
+
+				# inject the mixin into the contents as an array.
+				$this->file[$key] = $mixin;
+			}
+	}
+	
+	
+	
 	/**
 	 * Handles the parsing of each individual line
 	 */
@@ -113,12 +190,16 @@ class Kosass_Core
 	{
 		// set indent
 		$this->set_indent();
-		$type = $this->line_type($this->line);
+		
 		// call function type
+		$type = $this->line_type($this->line);
+		
+		# this sets $this->line to the formatted data.
 		$this->$type();
 		
 		// look ahead at next line to determine depth and close tags
 		$this->look_ahead();
+		
 		// construct line
 		$this->construct_line();
 	}
@@ -131,10 +212,16 @@ class Kosass_Core
 	 */
 	private function line_type($line, $debug = FALSE)
 	{
+		# get the first character on this line.
 		$first = substr(trim($line), 0, 1);
 		
+		# this means we are parsing data within a mixin definitin.
+		if ($this->in_mixin)
+		{
+			$type = 'mixin_data';
+		}
 		// ignore comments and empty lines return false first to reduce overhead
-		if ($first == '/')
+		else if ($first == '/')
 		{
 			$type = 'comment';
 		}
@@ -142,39 +229,38 @@ class Kosass_Core
 		{
 			$type = 'skip';
 		}
-		// check for attribute
-		elseif (strpos($line, ':'))
-		{
-			$type = 'attribute';
-		}
-		// check if first letter is an id, class or element
-		elseif ((in_array($first, array('#', '.'))) OR (preg_match('/[a-zA-Z]/', $first)))
-		{
-			$type = 'element';
-		}
-		// constant
+		// constant definition
 		elseif ($first == '!')
 		{
 			$type = 'constant';
 		}
-		// mixin
+		// mixin definition
 		elseif ($first == '=')
 		{
 			$type = 'mixin';
 		}
-		// append
-		elseif ($first == '&')
+		# check for attribute. Anly attrs. can retrieve constants (=)
+		elseif ((FALSE !== strpos($line, ':') OR strpos($line, '=')) AND FALSE === strpos($line, '&'))
 		{
-			$type = 'append';
+			$type = 'attribute';
+		}
+		# check if first letter is an id, class or element
+		# or contains parent reference (&)
+		elseif ((in_array($first, array('#', '.'))) OR (preg_match('/[a-zA-Z&]/', $first)))
+		{
+			$type = 'element'; 
 		}
 		// retrieve mixin
-		elseif ($first == '+')
+		elseif (trim($first) == '+')
 		{
 			$type = 'replace_mixin';
 		}
-		
 		return $type;
 	}
+
+
+
+//- line types -------------------------------------------------------
 	
 	/**
 	 * Skip putting current line in output
@@ -201,16 +287,104 @@ class Kosass_Core
 		$this->constants[trim($m[1])] = trim($m[2]);
 		$this->skip = TRUE;
 	}
+
+	/**
+	 * add mixins to mixin class array.
+	 */
+	private function mixin()
+	{
+		$var = trim(str_replace('=','', $this->line));
+		$this->mixins[$var] = array();
+		$this->in_mixin = $var;
+	}
+	
+	/**
+	 * add mixins to mixin class array.
+	 */
+	private function mixin_data()
+	{
+		# does this line have another mixin reference?
+		$ref = str_replace('+','', $this->line, $matches);
+	
+		# preserve indenting.
+		# all data is indented at least 2 spaces so we remove these.
+		$indent = str_repeat(' ', strlen($this->indent)-2);
+		
+		if(0 < $matches)
+			foreach($this->mixins[trim($ref)] as $line)
+				$this->mixins[$this->in_mixin][] = $indent . $line;
+		else
+			$this->mixins[$this->in_mixin][] =  $indent . trim($this->line);	
+	
+
+		# is this the last line in this mixin def. ?
+		# where next indent would equal zero
+		if(0 == strlen($this->next_indent))
+			$this->in_mixin = FALSE;
+	}
+	
+
 	
 	/**
 	 * Handle elements
 	 */
 	private function element()
-	{
-		$this->nested[] = trim($this->line);
-		$this->line = trim($this->line)." {\n";
+	{			
+		$curr_indent = strlen($this->indent);
+
+		# update the nested array.
+		$this->nested[$curr_indent] = trim($this->line);
+		
+		# is this element a child ?
+		# element is not root, the next line is indented  as attributes must be 
+		if(($curr_indent != 0) AND (strlen($this->next_indent) > $curr_indent))
+		{
+			# TODO optimize this.
+			$this->nested[$curr_indent] = str_replace('&', $this->nested[$curr_indent-2], trim($this->line));
+		
+			# create the parent string to prepend to the element names on this line.
+			# can have more then one ancentor so we loop.
+			$parent_string = '';
+			$i = 0;		
+			while($i <= $curr_indent-2) 
+			{
+				$parent_string .= $this->nested[$i] . ' ';
+				++$i; ++$i; # decrease by 2 (should always be even.)
+			}
+
+			# split up multiple element names
+			$elements = explode(',', $this->line);
+			
+			# create the new line.
+			$formatted_line = '';
+			foreach($elements as $element)
+			{
+				# is there an ampersand parent reference?
+				$element = str_replace('&', $this->nested[$curr_indent-2], $element, $matches);
+				if(0 < $matches)
+					$formatted_line .= str_replace($this->nested[$curr_indent-2], '', $parent_string) . trim($element) . ', ';
+				else
+					$formatted_line .= $parent_string . trim($element) . ', ';
+			}
+			# trim whitespace and trailing comma
+			$formatted_line = trim(trim($formatted_line), ',');
+		}
+		else
+		{
+			# this is a root element. create the new line.
+			$formatted_line = trim($this->line);
+		}
+		
+		# output line based on style.
+		if('nested' == $this->style)
+			$this->line = $this->indent . $formatted_line . " {\n";
+		elseif('expanded' == $this->style)
+			$this->line = $formatted_line . " {\n";
+		else
+			$this->line = $formatted_line . '{';
 	}
 	
+
 	
 	/**  ATTRIBUTE | VALUE | ARITHMETIC METHODS **/
 	
@@ -220,12 +394,25 @@ class Kosass_Core
 	 */
 	private function attribute()
 	{
-		preg_match('/:?([\w-]+?) *[ |:|=] *(.+)$/', $this->line, $m);
 		// check value for constant
+		preg_match('/:?([\w-]+?) *[ |:|=] *(.+)$/', $this->line, $m);
 		$value = $this->parse_value($m[2]);
 		
-		$this->line = $this->indent.$m[1].': '.$value.';';
+		# output line based on style.
+		if('nested' == $this->style)
+			$this->line = $this->indent . $m[1] . ': ' . $value . ';';
+		elseif('expanded' == $this->style)
+			$this->line = '  ' . $m[1] . ': ' . $value . ';';
+		else
+			$this->line = $m[1] . ':' . $value . '; ';		
+
 	}
+
+
+
+// ---- end line types -------------------------------------
+
+
 	
 	/**
 	 * Parse value from 
@@ -280,6 +467,19 @@ class Kosass_Core
 			$replace[] = $this->constants[$constant];
 			$this->value = str_replace($find, $replace, $this->value);
 		}
+	}
+
+	/*
+	 * Replace a mixin reference
+	 *
+	 * @param   param
+	 * @return  return
+	 */
+	private function replace_mixin()
+	{
+		$var = trim(str_replace('+', '', $this->line));
+		#$this->line = $this->indent . $this->mixins[$var];
+		$this->line = "[$var]";
 	}
 	
 	/**
@@ -546,16 +746,6 @@ class Kosass_Core
 		}
 	}
 	
-	/**
-	 * Comments.
-	 *
-	 * @param   param
-	 * @return  return
-	 */
-	private function mixin()
-	{
-		
-	}
 
 	/**
 	 * Rebuilds line after parsing
@@ -572,11 +762,13 @@ class Kosass_Core
 			$this->close();
 		
 		// add newline if none present
-		$this->add_new_line();
+		if('nested' == $this->style OR 'expanded' == $this->style)
+			$this->add_new_line();
 	}
 
 	/**
 	 * Add a new line to the current line if no new line is present
+	 * only for nested and expanded style outputs
 	 */
 	private function add_new_line()
 	{
@@ -588,7 +780,12 @@ class Kosass_Core
 	 */
 	private function close()
 	{
-		$this->line = $this->line." }\n";
+		if('nested' == $this->style OR 'compact' == $this->style)
+			$this->line = $this->line." }\n";
+		elseif('expanded' == $this->style)
+			$this->line = $this->line."\n}\n";
+		else
+			$this->line = $this->line."}";
 	}
 
 	/**
@@ -600,7 +797,6 @@ class Kosass_Core
 		// if indent is false set to 0
 		$this->indent = @$m[1];
 		// check the indent level
-		$this->check_indent(strlen($this->indent));
 	}
 
 	/*
@@ -610,15 +806,17 @@ class Kosass_Core
 	private function look_ahead()
 	{
 		$next = $this->lineno + 1;
-		$count = $this->file->count();
+		$count = count($this->file);
 		// get line type for next line if comment keep iterating
 		while (($this->next_type == 'comment') OR ($this->next_type == FALSE))
 		{
-			$this->next_type = $this->line_type(@$this->file->offsetGet($next), TRUE);
+			$next_line = (empty($this->file[$next])) ? '' : $this->file[$next]; 
+			$this->next_type = $this->line_type($next_line, TRUE);
 			$next++;
 		}
 		// get next indent
-		@preg_match('/^([ \t]+)/', $this->file->offsetGet($next), $m);
+		$next_line = (empty($this->file[$next])) ? '' : $this->file[$next]; 
+		@preg_match('/^([ \t]+)/', $next_line, $m);
 		$this->next_indent = @$m[1];
 
 		// check nesting indentation
@@ -631,9 +829,6 @@ class Kosass_Core
 			$line = $this->lineno+2;
 			throw new Exception("Incorrect nesting indentation in '$this->script' on line #$line.");
 		}
-
-		// check indentation level
-		$this->check_indent(strlen($this->next_indent), $next);
 	}
 
 	/**
@@ -658,18 +853,6 @@ class Kosass_Core
 		return str_replace($remove, '', trim($input));
 	}
 
-	/**
-	 * Check indent for current line. Raises error for invalid indentation.
-	 */
-	private function check_indent($indent, $line = NULL)
-	{
-		$line = ($line) ? $line+1 : $this->lineno+1;
-		if (($indent % 2) != 0)
-		{
-			$length = strlen($this->indent);
-			throw new Exception("Incorrect indentation in '$this->script' on line #$line.");
-		}
-	}
 
 	/**
 	 * Clears class variables and gets ready for next line.

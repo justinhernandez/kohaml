@@ -24,10 +24,19 @@ class Kohaml_Controller extends Template_Controller
 		$this->template->wow = new Haml('demo2');
 		$this->template->hello = ' the hello variable';
 	}
-	
+
+
 	public function sass()
-	{
-		$this->template->wow = new Haml('sass_demo');
-		$this->template->hello = ' sass files successfully rendered!';
+	{		
+		header("Content-type: text/css");
+		header("Pragma: public");
+		header("Cache-Control: no-cache, must-revalidate");
+		header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");		
+		
+		# output directly to battle-test this sucka
+		echo sass::stylesheet('advanced', 'nested');
+		die();
 	}
+	
+
 }
