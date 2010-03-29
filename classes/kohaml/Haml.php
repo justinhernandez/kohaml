@@ -7,15 +7,15 @@
  * @version        1.0.2
  * @license        http://www.opensource.org/licenses/isc-license.txt
  */
-class Haml extends View
+class Kohaml_Haml extends View
 {
 	// cached template file
-	private $cache_file;
-	// name of file to be parsed
-	private $file;
+	public $cache_file;
 	// skip if cache exists and is current
 	private $skip = FALSE;
-
+	// name of file to be parsed
+	protected $_file;
+	
 
 	/**
 	 * Set debug from config file and handle passed file name
@@ -25,14 +25,14 @@ class Haml extends View
 	public function __construct($name = NULL, $data = NULL, $type = NULL)
 	{
 		// Attempt to autoload template if name is empty
-		if (!$name) $name = $this->haml_autoload();
+		if ( ! $name) $name = $this->haml_autoload();
 		
 		// load file
-		$this->file = $this->load_file_path($name);
-		
+		$this->_file = $this->load_file_path($name);
+
 		// load cache library
 		$cache =  new Kohaml_Cache('kohaml');
-		$this->cache_file = $cache->check($this->file);
+		$this->cache_file = $cache->check($this->_file);
 		$debug = Kohana::config('kohaml.debug');
 		
 		// if cache file does not exists then cache output from Kohaml
@@ -40,7 +40,7 @@ class Haml extends View
 		{
 			$kohaml = new Kohaml($debug);
 			// put file contents into an array then pass to render
-			$output = $kohaml->compile(file($this->file), $name);
+			$output = $kohaml->compile(file($this->_file), $name);
 			// cache output
 			if ( ! $debug) $cache->cache($output);
 		}
@@ -63,9 +63,8 @@ class Haml extends View
 	private function load_file_path($name)
 	{
 		$type = Kohana::config('kohaml.ext');
-		$raise = Kohana::config('kohaml.find_raise_error');
-		
-		return Kohana::find_file('views', $name, $raise, $type);
+
+		return Kohana::find_file('views', $name, $type);
 	}
 
 	/**
@@ -94,10 +93,6 @@ class Haml extends View
 		}
 		else
 		{
-			// Check if the filetype is allowed by the configuration
-			if ( ! in_array($type, Kohana::config('view.allowed_filetypes')))
-				throw new Kohana_Exception('core.invalid_filetype', $type);
-
 			// Load the filename and set the content type
 			if (Kohana::config('kohaml.on') && $type == Kohana::config('kohaml.ext'))
 			{
@@ -109,7 +104,7 @@ class Haml extends View
 			}
 			$this->kohana_filetype = Kohana::config('mimes.'.$type);
 
-			if ($this->kohana_filetype == NULL)
+			if (empty($this->kohana_filetype))
 			{
 				// Use the specified type
 				$this->kohana_filetype = $type;

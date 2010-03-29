@@ -471,7 +471,7 @@ class Kohaml_Core
 	{
 		if (strpos($this->matched_attr, ','))
 		{
-			$attr = split(',', $this->matched_attr);
+			$attr = explode(',', $this->matched_attr);
 		}
 		else
 		{
@@ -480,7 +480,7 @@ class Kohaml_Core
 
 		foreach($attr as $a)
 		{
-			$val = split('=>', $a);
+			$val = explode('=>', $a);
 			@$this->add_attr($this->clean_attr($val[0]), array($this->clean_attr($val[1])));
 		}
 	}

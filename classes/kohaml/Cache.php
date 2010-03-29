@@ -6,7 +6,7 @@
  * @author			Justin Hernandez <justin@transphorm.com>
  * @copyright		2009
  */
-class Kohaml_Cache_Core
+class Kohaml_Cache
 {
 	// skip caching?
 	private $skip;

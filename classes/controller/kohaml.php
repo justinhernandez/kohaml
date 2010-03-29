@@ -6,27 +6,21 @@
  * @author         Justin Hernandez <justin@transphorm.com>
  * @license        http://www.opensource.org/licenses/isc-license.txt
  */
-class Kohaml_Controller extends Template_Controller
+class Controller_Kohaml extends Controller_Template
 {
 	// loads kohaml.haml
 	public $template = "kohaml";
 
-	// Do not allow to run in production
-	const ALLOW_PRODUCTION = FALSE;
+	public $kohaml = TRUE;
 
-	public function __construct()
-	{
-		parent::__construct(); // necessary
-	}
-
-	public function index()
+	public function action_index()
 	{
 		$this->template->wow = new Haml('demo2');
 		$this->template->hello = ' the hello variable';
 	}
 
 
-	public function sass()
+	public function action_sass()
 	{		
 		header("Content-type: text/css");
 		header("Pragma: public");
