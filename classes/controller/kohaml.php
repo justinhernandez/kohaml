@@ -13,6 +13,8 @@ class Controller_Kohaml extends Controller_Template
 
 	public $kohaml = TRUE;
 
+	//public $auto_render = FALSE;
+
 	public function action_index()
 	{
 		$this->template->wow = new Haml('demo2');

@@ -211,12 +211,12 @@ class Kohana_View {
 	public function set_filename($file)
 	{
 		// if cached file exists no need to check path
-		if ($file->cache_file)
+		if (isset($file->cache_file))
 		{
 			$this->_file = $file->cache_file;
 		}
 		else
-			{
+		{
 			if (($path = Kohana::find_file('views', $file)) === FALSE)
 			{
 				throw new Kohana_View_Exception('The requested view :file could not be found', array(
