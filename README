@@ -1,3 +1,11 @@
+This module is old and outdated and does not yet work for Kohana V3. Instead take a look at a better implementation by Fred Wu here - https://github.com/fredwu/kohana-phamlp.
+
+It integrates the well written phamlp library into a kohana module. Thanks again!
+
+
+
+
+
 Haml module for Kohana. Haml is a markup language that‘s used to cleanly and simply describe the XHTML of any web document, without the use of inline code. Haml functions as a replacement for inline page templating systems such as PHP, ERB, and ASP. However, Haml avoids the need for explicitly coding XHTML into the template, because it is actually an abstract description of the XHTML, with some code to generate dynamic content. 
 
 You can use KohamlLib without Kohana and integrate it into your own project. Turn standalone to TRUE and read the init() function for more instructions.
